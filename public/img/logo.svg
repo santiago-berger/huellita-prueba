@@ -1,0 +1,16 @@
+<svg width="40" height="40" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="pin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E4ECF5"/>
+    </linearGradient>
+  </defs>
+  <path d="M256 60 C175 60 110 122 110 200 C110 280 200 360 248 396 A14 14 0 0 0 268 396 C316 360 406 280 406 200 C406 122 341 60 256 60 Z" fill="url(#pin)"/>
+  <g fill="#2E75B6" transform="translate(256 196)">
+    <path d="M0 6 C-38 6 -66 24 -76 50 C-85 73 -76 96 -54 108 C-40 116 -33 124 -25 132 C-17 140 -9 145 0 145 C9 145 17 140 25 132 C33 124 40 116 54 108 C76 96 85 73 76 50 C66 24 38 6 0 6 Z"/>
+    <ellipse cx="-31" cy="-46" rx="22" ry="30" transform="rotate(-18 -31 -46)"/>
+    <ellipse cx="31" cy="-46" rx="22" ry="30" transform="rotate(18 31 -46)"/>
+    <ellipse cx="-73" cy="6" rx="19" ry="27" transform="rotate(-42 -73 6)"/>
+    <ellipse cx="73" cy="6" rx="19" ry="27" transform="rotate(42 73 6)"/>
+  </g>
+</svg>

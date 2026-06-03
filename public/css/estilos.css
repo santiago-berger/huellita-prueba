@@ -1,0 +1,189 @@
+/* css/estilos.css
+   Estilos propios de Huellita, aplicados sobre Bootstrap.
+   Paleta de marca: azul profundo (navy) y azul medio. */
+
+:root {
+  --azul-profundo: #1F3864;
+  --azul-medio: #2E75B6;
+  --azul-claro: #EAF1F8;
+  --gris-texto: #404040;
+  --fondo: #F4F7FB;
+}
+
+/* ----- Tipografias ----- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Nunito+Sans:wght@400;600&display=swap');
+
+body {
+  font-family: 'Nunito Sans', sans-serif;
+  background-color: var(--fondo);
+  color: var(--gris-texto);
+}
+
+h1, h2, h3, h4, h5, .titulo {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  color: var(--azul-profundo);
+}
+
+/* ----- Barra de navegacion ----- */
+.navbar-huellita {
+  background-color: var(--azul-profundo);
+}
+.navbar-huellita .navbar-brand {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.navbar-huellita .nav-link {
+  color: #d8e3f0;
+  font-weight: 600;
+}
+.navbar-huellita .nav-link:hover {
+  color: #ffffff;
+}
+.navbar-brand img {
+  height: 34px;
+}
+
+/* ----- Encabezado / hero ----- */
+.hero {
+  background: linear-gradient(135deg, var(--azul-medio) 0%, var(--azul-profundo) 100%);
+  color: #ffffff;
+  padding: 70px 0;
+  text-align: center;
+}
+.hero h1 {
+  color: #ffffff;
+  font-size: 2.8rem;
+}
+.hero p {
+  font-size: 1.2rem;
+  color: #e2ecf6;
+}
+
+/* ----- Botones ----- */
+.btn-huellita {
+  background-color: var(--azul-medio);
+  border-color: var(--azul-medio);
+  color: #ffffff;
+  font-weight: 600;
+}
+.btn-huellita:hover {
+  background-color: var(--azul-profundo);
+  border-color: var(--azul-profundo);
+  color: #ffffff;
+}
+
+/* ----- Tarjetas de mascotas ----- */
+.card-mascota {
+  border: none;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(31, 56, 100, 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  height: 100%;
+}
+.card-mascota:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 22px rgba(31, 56, 100, 0.2);
+}
+.card-mascota .foto {
+  height: 200px;
+  object-fit: cover;
+  width: 100%;
+  background-color: var(--azul-claro);
+}
+.card-mascota .card-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  color: var(--azul-profundo);
+}
+
+/* ----- Etiquetas de estado ----- */
+.estado-perdida { background-color: #d9534f; color: #fff; }
+.estado-encontrada { background-color: #5cb85c; color: #fff; }
+.estado-reencontrada { background-color: var(--azul-medio); color: #fff; }
+.badge-estado {
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* ----- Secciones con titulo ----- */
+.seccion-titulo {
+  border-bottom: 3px solid var(--azul-medio);
+  padding-bottom: 8px;
+  margin-bottom: 24px;
+  display: inline-block;
+}
+
+/* ----- Pie de pagina ----- */
+.footer-huellita {
+  background-color: var(--azul-profundo);
+  color: #c9d6e6;
+  padding: 24px 0;
+  text-align: center;
+  margin-top: 60px;
+  font-size: 0.9rem;
+}
+
+/* ----- Cuadro de la guia ----- */
+.paso-guia {
+  background-color: #ffffff;
+  border-left: 5px solid var(--azul-medio);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(31, 56, 100, 0.08);
+}
+.paso-guia .numero {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  color: var(--azul-medio);
+  font-size: 1.3rem;
+  margin-right: 8px;
+}
+
+/* ----- Avistamientos ----- */
+.item-avistamiento {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  border-left: 4px solid var(--azul-medio);
+}
+
+/* ----- Cartel imprimible (RP-15) ----- */
+.cartel {
+  border: 4px solid var(--azul-profundo);
+  border-radius: 10px;
+  padding: 30px;
+  background-color: #ffffff;
+  max-width: 700px;
+  margin: 0 auto;
+}
+.cartel h1 {
+  font-size: 3rem;
+  text-align: center;
+  color: #d9534f;
+  letter-spacing: 2px;
+}
+.cartel .foto-cartel {
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  margin: 16px 0;
+}
+
+/* Al imprimir, se ocultan los elementos que no son el cartel */
+@media print {
+  .navbar-huellita, .footer-huellita, .no-imprimir {
+    display: none !important;
+  }
+  body { background-color: #ffffff; }
+}

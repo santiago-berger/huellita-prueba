@@ -1,0 +1,11 @@
+<svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#EAF1F8"/>
+  <g fill="#A9C2DC" transform="translate(200 140) scale(0.9)">
+    <path d="M0 6 C-38 6 -66 24 -76 50 C-85 73 -76 96 -54 108 C-40 116 -33 124 -25 132 C-17 140 -9 145 0 145 C9 145 17 140 25 132 C33 124 40 116 54 108 C76 96 85 73 76 50 C66 24 38 6 0 6 Z"/>
+    <ellipse cx="-31" cy="-46" rx="22" ry="30" transform="rotate(-18 -31 -46)"/>
+    <ellipse cx="31" cy="-46" rx="22" ry="30" transform="rotate(18 31 -46)"/>
+    <ellipse cx="-73" cy="6" rx="19" ry="27" transform="rotate(-42 -73 6)"/>
+    <ellipse cx="73" cy="6" rx="19" ry="27" transform="rotate(42 73 6)"/>
+  </g>
+  <text x="200" y="270" font-family="sans-serif" font-size="16" fill="#7C9AB8" text-anchor="middle">Sin foto disponible</text>
+</svg>
