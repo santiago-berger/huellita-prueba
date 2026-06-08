@@ -2,7 +2,7 @@
 // Punto de entrada del servidor de Huellita.
 // Configura Express, las sesiones, las rutas de la API y sincroniza
 // la base de datos con Sequelize.
-
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
@@ -13,7 +13,7 @@ const rutasReportes = require('./routes/reportes');
 const rutasEstablecimientos = require('./routes/establecimientos');
 
 const app = express();
-const PUERTO = 3000;
+const PUERTO = process.env.PORT || 3000;
 
 // --- Middlewares ---
 app.use(express.json()); // permite leer el cuerpo JSON de las peticiones
@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Configuracion de sesiones (para RP-02 y RP-03)
 app.use(session({
-  secret: 'huellita-clave-secreta',
+  secret: process.env.SESSION_SECRET || 'huellita-clave-secreta',
   resave: false,
   saveUninitialized: false,
 }));
