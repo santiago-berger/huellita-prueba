@@ -6,19 +6,32 @@ const router = express.Router();
 const { Op } = require('sequelize');
 const { Reporte, Avistamiento, Usuario } = require('../models');
 const { requiereSesion } = require('../middleware/auth');
+const { body, validationResult } = require('express-validator');
+
+// Validaciones para crear o editar un reporte
+const reglasReporte = [
+  body('especie')
+    .trim()
+    .notEmpty().withMessage('La especie es obligatoria')
+    .isIn(['perro', 'gato', 'otro']).withMessage('La especie debe ser perro, gato u otro'),
+  body('zona')
+    .trim()
+    .notEmpty().withMessage('La zona es obligatoria'),
+  body('fecha')
+    .notEmpty().withMessage('La fecha es obligatoria')
+    .isDate().withMessage('La fecha no tiene un formato valido'),
+];
 
 // --- RP-04 y RP-12: Crear un reporte (perdida o encontrada) ---
 // POST /reportes
-router.post('/reportes', requiereSesion, async (req, res) => {
+router.post('/reportes', requiereSesion, reglasReporte, async (req, res) => {
+  const errores = validationResult(req);
+  if (!errores.isEmpty()) {
+    return res.status(400).json({ errores: errores.array() });
+  }
   try {
     const { nombre_mascota, especie, color, tamano, zona, fecha, foto_url, comentario, estado } = req.body;
 
-    // CA: no se puede publicar sin completar zona y fecha
-    if (!especie || !zona || !fecha) {
-      return res.status(400).json({ error: 'La especie, la zona y la fecha son obligatorias.' });
-    }
-
-    // El estado solo puede ser Perdida o Encontrada al crear
     const estadoInicial = estado === 'Encontrada' ? 'Encontrada' : 'Perdida';
 
     const reporte = await Reporte.create({
@@ -41,10 +54,8 @@ router.get('/reportes', async (req, res) => {
     const { estado, especie, zona } = req.query;
     const where = {};
 
-    // Por defecto se muestran las mascotas perdidas (RP-07)
     where.estado = estado || 'Perdida';
 
-    // RP-08: filtros opcionales por especie y zona
     if (especie) where.especie = especie;
     if (zona) where.zona = { [Op.like]: '%' + zona + '%' };
 
@@ -73,13 +84,16 @@ router.get('/reportes/:id', async (req, res) => {
 
 // --- RP-06: Editar un reporte ---
 // PUT /reportes/:id
-router.put('/reportes/:id', requiereSesion, async (req, res) => {
+router.put('/reportes/:id', requiereSesion, reglasReporte, async (req, res) => {
+  const errores = validationResult(req);
+  if (!errores.isEmpty()) {
+    return res.status(400).json({ errores: errores.array() });
+  }
   try {
     const reporte = await Reporte.findByPk(req.params.id);
     if (!reporte) {
       return res.status(404).json({ error: 'No se encontro el reporte.' });
     }
-    // CA: solo el dueño del reporte puede editarlo
     if (reporte.usuario_id !== req.session.usuario.id) {
       return res.status(403).json({ error: 'Solo el dueño del reporte puede editarlo.' });
     }
@@ -122,7 +136,6 @@ router.get('/reportes/:id/coincidencias', async (req, res) => {
     if (!reporte) {
       return res.status(404).json({ error: 'No se encontro el reporte.' });
     }
-    // Se buscan reportes "Encontrada" con la misma especie y zona
     const coincidencias = await Reporte.findAll({
       where: {
         estado: 'Encontrada',
@@ -165,7 +178,7 @@ router.get('/reportes/:id/avistamientos', async (req, res) => {
   try {
     const avistamientos = await Avistamiento.findAll({
       where: { reporte_id: req.params.id },
-      order: [['fecha', 'DESC']], // del mas reciente al mas antiguo
+      order: [['fecha', 'DESC']],
     });
     res.json(avistamientos);
   } catch (err) {

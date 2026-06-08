@@ -1,74 +1,80 @@
 // routes/usuarios.js
-// Rutas de registro, inicio de sesion y cierre de sesion.
-// Funcionalidades RP-01, RP-02 y RP-03.
 const express = require('express');
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
 const { Usuario } = require('../models');
 
-// --- RP-01: Registro de usuario ---
-// POST /usuarios
-router.post('/usuarios', async (req, res) => {
+// Reglas de validacion reutilizables
+const reglasRegistro = [
+  body('nombre')
+    .trim()
+    .notEmpty().withMessage('El nombre es obligatorio')
+    .isLength({ max: 100 }).withMessage('El nombre no puede superar los 100 caracteres'),
+  body('email')
+    .trim()
+    .notEmpty().withMessage('El email es obligatorio')
+    .isEmail().withMessage('El email no tiene un formato valido'),
+  body('contrasena')
+    .notEmpty().withMessage('La contrasena es obligatoria')
+    .isLength({ min: 6 }).withMessage('La contrasena debe tener al menos 6 caracteres'),
+];
+
+// POST /api/usuarios/registro
+router.post('/registro', reglasRegistro, async (req, res) => {
+  const errores = validationResult(req);
+  if (!errores.isEmpty()) {
+    return res.status(400).json({ errores: errores.array() });
+  }
+
   try {
-    const { nombre, correo, contrasena } = req.body;
-
-    // Validacion de campos obligatorios
-    if (!nombre || !correo || !contrasena) {
-      return res.status(400).json({ error: 'Todos los campos son obligatorios.' });
+    const { nombre, email, contrasena } = req.body;
+    const existe = await Usuario.findOne({ where: { email } });
+    if (existe) {
+      return res.status(400).json({ mensaje: 'El email ya esta registrado' });
     }
-    // CA: la contrasena debe tener al menos 6 caracteres
-    if (contrasena.length < 6) {
-      return res.status(400).json({ error: 'La contrasena debe tener al menos 6 caracteres.' });
-    }
-    // CA: no se permiten dos cuentas con el mismo correo
-    const existente = await Usuario.findOne({ where: { correo } });
-    if (existente) {
-      return res.status(400).json({ error: 'Ya existe una cuenta con ese correo electronico.' });
-    }
-
-    const usuario = await Usuario.create({ nombre, correo, contrasena });
-    res.status(201).json({ mensaje: 'Cuenta creada con exito.', id: usuario.id });
-  } catch (err) {
-    res.status(500).json({ error: 'Error del servidor al registrar el usuario.' });
+    const usuario = await Usuario.create({ nombre, email, contrasena });
+    req.session.usuarioId = usuario.id;
+    req.session.usuarioNombre = usuario.nombre;
+    res.status(201).json({ mensaje: 'Registro exitoso', nombre: usuario.nombre });
+  } catch (error) {
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
   }
 });
 
-// --- RP-02: Inicio de sesion ---
-// POST /login
-router.post('/login', async (req, res) => {
+// POST /api/usuarios/login
+router.post('/login', [
+  body('email').trim().notEmpty().isEmail().withMessage('Email invalido'),
+  body('contrasena').notEmpty().withMessage('La contrasena es obligatoria'),
+], async (req, res) => {
+  const errores = validationResult(req);
+  if (!errores.isEmpty()) {
+    return res.status(400).json({ errores: errores.array() });
+  }
+
   try {
-    const { correo, contrasena } = req.body;
-
-    if (!correo || !contrasena) {
-      return res.status(400).json({ error: 'Ingresa el correo y la contrasena.' });
+    const { email, contrasena } = req.body;
+    const usuario = await Usuario.findOne({ where: { email, contrasena } });
+    if (!usuario) {
+      return res.status(401).json({ mensaje: 'Email o contrasena incorrectos' });
     }
-
-    const usuario = await Usuario.findOne({ where: { correo } });
-    // CA: si los datos son incorrectos, se muestra un mensaje de error
-    if (!usuario || usuario.contrasena !== contrasena) {
-      return res.status(401).json({ error: 'Correo o contrasena incorrectos.' });
-    }
-
-    // Se guarda la sesion del usuario
-    req.session.usuario = { id: usuario.id, nombre: usuario.nombre };
-    res.json({ mensaje: 'Sesion iniciada.', nombre: usuario.nombre });
-  } catch (err) {
-    res.status(500).json({ error: 'Error del servidor al iniciar sesion.' });
+    req.session.usuarioId = usuario.id;
+    req.session.usuarioNombre = usuario.nombre;
+    res.json({ mensaje: 'Login exitoso', nombre: usuario.nombre });
+  } catch (error) {
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
   }
 });
 
-// --- RP-03: Cierre de sesion ---
-// GET /logout
-router.get('/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.json({ mensaje: 'Sesion cerrada.' });
-  });
+// POST /api/usuarios/logout
+router.post('/logout', (req, res) => {
+  req.session.destroy();
+  res.json({ mensaje: 'Sesion cerrada' });
 });
 
-// --- Consulta del estado de la sesion (auxiliar para el frontend) ---
-// GET /sesion
+// GET /api/usuarios/sesion
 router.get('/sesion', (req, res) => {
-  if (req.session && req.session.usuario) {
-    res.json({ autenticado: true, usuario: req.session.usuario });
+  if (req.session.usuarioId) {
+    res.json({ autenticado: true, nombre: req.session.usuarioNombre });
   } else {
     res.json({ autenticado: false });
   }
