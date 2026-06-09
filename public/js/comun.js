@@ -23,6 +23,7 @@ async function generarNavbar(paginaActiva) {
     <li class="nav-item"><a class="nav-link ${paginaActiva === 'inicio' ? 'active' : ''}" href="index.html">Inicio</a></li>
     <li class="nav-item"><a class="nav-link ${paginaActiva === 'reportes' ? 'active' : ''}" href="reportes.html">Mascotas perdidas</a></li>
     <li class="nav-item"><a class="nav-link ${paginaActiva === 'encontradas' ? 'active' : ''}" href="encontradas.html">Encontradas</a></li>
+    <li class="nav-item"><a class="nav-link ${paginaActiva === 'mapa' ? 'active' : ''}" href="mapa.html">Mapa</a></li>
     <li class="nav-item"><a class="nav-link ${paginaActiva === 'guia' ? 'active' : ''}" href="guia.html">Guia</a></li>
     <li class="nav-item"><a class="nav-link ${paginaActiva === 'directorio' ? 'active' : ''}" href="directorio.html">Directorio</a></li>
   `;
