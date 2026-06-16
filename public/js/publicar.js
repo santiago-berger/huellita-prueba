@@ -2,6 +2,7 @@
 // Maneja la publicacion (RP-04, RP-12) y la edicion (RP-06) de reportes.
 // Si la URL trae ?id=, la pagina funciona en modo edicion.
 
+
 const params = new URLSearchParams(window.location.search);
 const idEdicion = params.get('id');
 
@@ -32,6 +33,7 @@ async function cargarParaEditar() {
   document.getElementById('titulo-form').textContent = 'Editar caso';
   document.getElementById('btn-guardar').textContent = 'Guardar cambios';
   try {
+    console.log(r);
     const resp = await fetch('/reportes/' + idEdicion);
     const r = await resp.json();
     document.getElementById('tipo').value = r.estado === 'Encontrada' ? 'Encontrada' : 'Perdida';
@@ -70,6 +72,7 @@ document.getElementById('btn-guardar').addEventListener('click', async () => {
   }
 
   try {
+    console.log('Datos enviados:', datos);
     let resp;
     if (idEdicion) {
       // RP-06: editar
@@ -92,8 +95,11 @@ document.getElementById('btn-guardar').addEventListener('click', async () => {
       const destino = idEdicion ? 'ficha.html?id=' + idEdicion : 'reportes.html';
       setTimeout(() => { window.location.href = destino; }, 1500);
     } else {
-      mostrarMensaje('msg-form', data.error, 'danger');
-    }
+  const msg = data.error
+    || (data.errores && data.errores[0]?.msg)
+    || 'Error al guardar el reporte.';
+    mostrarMensaje('msg-form', msg, 'danger');
+}
   } catch (err) {
     mostrarMensaje('msg-form', 'No se pudo conectar con el servidor.', 'danger');
   }

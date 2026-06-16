@@ -27,6 +27,7 @@ const reglasReporte = [
 router.post('/reportes', requiereSesion, reglasReporte, async (req, res) => {
   const errores = validationResult(req);
   if (!errores.isEmpty()) {
+    console.log('Errores de validación:', errores.array());
     return res.status(400).json({ errores: errores.array() });
   }
   try {

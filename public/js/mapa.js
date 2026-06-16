@@ -109,16 +109,53 @@ async function cargarMarcadores() {
 // Centra en Formosa y agrega una pequeña variación aleatoria para que
 // los marcadores no se superpongan exactamente.
 function coordenadasPorZona(zona) {
-  const zonas = {
-    'centro':     [-26.1775, -58.1781],
-    'norte':      [-26.1650, -58.1750],
-    'sur':        [-26.1900, -58.1800],
-    'este':       [-26.1780, -58.1600],
-    'oeste':      [-26.1780, -58.1950],
-    'villa del parque': [-26.1720, -58.1850],
-    'john f kennedy':   [-26.1830, -58.1700],
-    'san miguel':       [-26.1700, -58.1900],
-  };
+ const zonas = {
+  // Centro y macrocentro
+  'centro':                   [-26.1775, -58.1781],
+  'centro historico':         [-26.1775, -58.1781],
+  // Barrios mencionados en fuentes oficiales de Formosa Capital
+  'san miguel':               [-26.1658, -58.1742],
+  'san francisco':            [-26.1720, -58.1855],
+  '2 de abril':               [-26.1695, -58.1930],
+  'dos de abril':             [-26.1695, -58.1930],
+  'juan domingo peron':       [-26.1820, -58.1650],
+  'peron':                    [-26.1820, -58.1650],
+  'eva peron':                [-26.1850, -58.1600],
+  'independencia':            [-26.1740, -58.1680],
+  'namqom':                   [-26.1530, -58.1590],
+  'villa del carmen':         [-26.1950, -58.1780],
+  'la nueva formosa':         [-26.1980, -58.1820],
+  'nueva pompeya':            [-26.2010, -58.1850],
+  'antenor gauna':            [-26.1700, -58.2020],
+  'gauna':                    [-26.1700, -58.2020],
+  'guadalupe':                [-26.1760, -58.1600],
+  'la paz':                   [-26.1810, -58.1900],
+  'simon bolivar':            [-26.1870, -58.1650],
+  'bolivar':                  [-26.1870, -58.1650],
+  'mariano moreno':           [-26.1900, -58.1960],
+  'moreno':                   [-26.1900, -58.1960],
+  'parque urbano':            [-26.1750, -58.1800],
+  'bernardino rivadavia':     [-26.1680, -58.1700],
+  'rivadavia':                [-26.1680, -58.1700],
+  'republica argentina':      [-26.1920, -58.1700],
+  'colluccio':                [-26.1760, -58.1840],
+  'divino nino':              [-26.1730, -58.1760],
+  'san antonio':              [-26.1850, -58.2050],
+  'illia':                    [-26.1800, -58.1750],
+  'el puco':                  [-26.1920, -58.1900],
+  'lujan':                    [-26.1770, -58.1870],
+  'lote 111':                 [-26.1650, -58.1830],
+  '8 de marzo':               [-26.1960, -58.1850],
+  '28 de junio':              [-26.1880, -58.1720],
+  'fray salvador gurrieri':   [-26.1940, -58.1760],
+  'mbigue':                   [-26.1560, -58.1670],
+  'juan manuel de rosas':     [-26.1710, -58.1910],
+  // Puntos cardinales como fallback
+  'norte':                    [-26.1580, -58.1750],
+  'sur':                      [-26.1950, -58.1800],
+  'este':                     [-26.1780, -58.1580],
+  'oeste':                    [-26.1780, -58.2000],
+};
 
   const clave = zona ? zona.toLowerCase().trim() : '';
   let base = zonas[clave] || [LAT_FORMOSA, LNG_FORMOSA];

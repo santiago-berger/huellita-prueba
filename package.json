@@ -8,9 +8,11 @@
     "dev": "node app.js"
   },
   "dependencies": {
+    "dotenv": "^17.4.2",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
-    "sequelize": "^6.37.3",
-    "mysql2": "^3.10.0"
+    "express-validator": "^7.3.2",
+    "mysql2": "^3.10.0",
+    "sequelize": "^6.37.3"
   }
 }
