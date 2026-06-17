@@ -52,6 +52,15 @@ const Reporte = sequelize.define('Reporte', {
     allowNull: false,
     defaultValue: 'Perdida', // Perdida | Encontrada | Reencontrada
   },
+  // Coordenadas opcionales para ubicación exacta en el mapa
+  latitud: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  longitud: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
 }, {
   tableName: 'reportes',
   timestamps: false,

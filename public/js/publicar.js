@@ -2,7 +2,25 @@
 // Maneja la publicacion (RP-04, RP-12) y la edicion (RP-06) de reportes.
 // Si la URL trae ?id=, la pagina funciona en modo edicion.
 
+// --- Mapa de ubicación (Leaflet) ---
+let latSeleccionada = null;
+let lngSeleccionada = null;
+let markerPublicar = null;
 
+const mapaPublicar = L.map('mapa-publicar').setView([-26.1775, -58.1781], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+  maxZoom: 19,
+}).addTo(mapaPublicar);
+
+mapaPublicar.on('click', (e) => {
+  latSeleccionada = e.latlng.lat;
+  lngSeleccionada = e.latlng.lng;
+  if (markerPublicar) markerPublicar.remove();
+  markerPublicar = L.marker([latSeleccionada, lngSeleccionada]).addTo(mapaPublicar);
+});
+
+// --- Inicialización ---
 const params = new URLSearchParams(window.location.search);
 const idEdicion = params.get('id');
 
@@ -33,7 +51,6 @@ async function cargarParaEditar() {
   document.getElementById('titulo-form').textContent = 'Editar caso';
   document.getElementById('btn-guardar').textContent = 'Guardar cambios';
   try {
-    console.log(r);
     const resp = await fetch('/reportes/' + idEdicion);
     const r = await resp.json();
     document.getElementById('tipo').value = r.estado === 'Encontrada' ? 'Encontrada' : 'Perdida';
@@ -46,6 +63,14 @@ async function cargarParaEditar() {
     document.getElementById('fecha').value = r.fecha || '';
     document.getElementById('foto_url').value = r.foto_url || '';
     document.getElementById('comentario').value = r.comentario || '';
+
+    // Si el reporte ya tiene coordenadas, poner el marker en el mapa
+    if (r.latitud && r.longitud) {
+      latSeleccionada = r.latitud;
+      lngSeleccionada = r.longitud;
+      markerPublicar = L.marker([latSeleccionada, lngSeleccionada]).addTo(mapaPublicar);
+      mapaPublicar.setView([latSeleccionada, lngSeleccionada], 15);
+    }
   } catch (err) {
     mostrarMensaje('msg-form', 'No se pudo cargar el reporte.', 'danger');
   }
@@ -63,6 +88,8 @@ document.getElementById('btn-guardar').addEventListener('click', async () => {
     fecha: document.getElementById('fecha').value,
     foto_url: document.getElementById('foto_url').value.trim(),
     comentario: document.getElementById('comentario').value.trim(),
+    latitud: latSeleccionada,
+    longitud: lngSeleccionada,
   };
 
   // Validacion: especie, zona y fecha son obligatorias
@@ -95,11 +122,11 @@ document.getElementById('btn-guardar').addEventListener('click', async () => {
       const destino = idEdicion ? 'ficha.html?id=' + idEdicion : 'reportes.html';
       setTimeout(() => { window.location.href = destino; }, 1500);
     } else {
-  const msg = data.error
-    || (data.errores && data.errores[0]?.msg)
-    || 'Error al guardar el reporte.';
-    mostrarMensaje('msg-form', msg, 'danger');
-}
+      const msg = data.error
+        || (data.errores && data.errores[0]?.msg)
+        || 'Error al guardar el reporte.';
+      mostrarMensaje('msg-form', msg, 'danger');
+    }
   } catch (err) {
     mostrarMensaje('msg-form', 'No se pudo conectar con el servidor.', 'danger');
   }
