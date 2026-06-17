@@ -92,9 +92,13 @@ document.getElementById('btn-guardar').addEventListener('click', async () => {
     longitud: lngSeleccionada,
   };
 
-  // Validacion: especie, zona y fecha son obligatorias
+  // Validacion: especie, zona, fecha y ubicacion en el mapa son obligatorias
   if (!datos.especie || !datos.zona || !datos.fecha) {
     mostrarMensaje('msg-form', 'La especie, la zona y la fecha son obligatorias.', 'danger');
+    return;
+  }
+  if (!latSeleccionada || !lngSeleccionada) {
+    mostrarMensaje('msg-form', 'Debés marcar la ubicación exacta en el mapa.', 'danger');
     return;
   }
 
