@@ -88,9 +88,11 @@ async function cargarMarcadores() {
       reportes = reportes.concat(data.map(r => ({ ...r, _estado: 'Encontrada' })));
     }
 
-    // Dibujar marcadores con coordenadas de Formosa + variación aleatoria por zona
+    // Dibujar marcadores: coordenadas reales si existen, si no usar diccionario por zona
     reportes.forEach(r => {
-      const coords = coordenadasPorZona(r.zona);
+      const coords = (r.latitud && r.longitud)
+        ? [r.latitud, r.longitud]
+        : coordenadasPorZona(r.zona);
       const icono = r._estado === 'Perdida' ? iconoPerdida : iconoEncontrada;
       L.marker(coords, { icon: icono })
         .bindPopup(contenidoPopup(r), { maxWidth: 220 })
