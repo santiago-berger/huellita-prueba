@@ -31,7 +31,7 @@ router.post('/reportes', requiereSesion, reglasReporte, async (req, res) => {
     return res.status(400).json({ errores: errores.array() });
   }
   try {
-    const { nombre_mascota, especie, color, tamano, zona, fecha, foto_url, comentario, estado } = req.body;
+    const { nombre_mascota, especie, color, tamano, zona, fecha, foto_url, comentario, estado, latitud, longitud } = req.body;
 
     const estadoInicial = estado === 'Encontrada' ? 'Encontrada' : 'Perdida';
 
@@ -41,6 +41,8 @@ router.post('/reportes', requiereSesion, reglasReporte, async (req, res) => {
       especie, color: color || null, tamano: tamano || null,
       zona, fecha, foto_url: foto_url || null, comentario: comentario || null,
       estado: estadoInicial,
+      latitud: latitud || null,
+      longitud: longitud || null,
     });
     res.status(201).json({ mensaje: 'Reporte publicado con exito.', id: reporte.id });
   } catch (err) {
@@ -99,7 +101,7 @@ router.put('/reportes/:id', requiereSesion, reglasReporte, async (req, res) => {
       return res.status(403).json({ error: 'Solo el dueño del reporte puede editarlo.' });
     }
 
-    const campos = ['nombre_mascota', 'especie', 'color', 'tamano', 'zona', 'fecha', 'foto_url', 'comentario'];
+    const campos = ['nombre_mascota', 'especie', 'color', 'tamano', 'zona', 'fecha', 'foto_url', 'comentario', 'latitud', 'longitud'];
     campos.forEach((campo) => {
       if (req.body[campo] !== undefined) reporte[campo] = req.body[campo];
     });
