@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
@@ -10,6 +10,14 @@
     />
     <link
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
       rel="stylesheet"
     />
     <link href="css/estilos.css" rel="stylesheet" />
@@ -81,10 +89,17 @@
         </div>
       </div>
 
-      <!-- Leyenda -->
-      <div class="leyenda mb-3 d-inline-block">
-        <span class="punto-rojo"></span> Mascota perdida &nbsp;
-        <span class="punto-verde"></span> Mascota encontrada
+      <!-- Leyenda y botón ubicación -->
+      <div
+        class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2"
+      >
+        <div class="leyenda d-inline-block">
+          <span class="punto-rojo"></span> Mascota perdida &nbsp;
+          <span class="punto-verde"></span> Mascota encontrada
+        </div>
+        <button id="btn-mi-ubicacion" class="btn btn-outline-secondary btn-sm">
+          📍 Mi ubicación
+        </button>
       </div>
 
       <!-- Mapa -->
@@ -98,6 +113,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script src="js/comun.js"></script>
     <script src="js/mapa.js"></script>
   </body>
