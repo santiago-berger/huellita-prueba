@@ -22,7 +22,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(mapa);
 
 // Grupo de marcadores (permite limpiar y redibujar)
-let capaMarcadores = L.layerGroup().addTo(mapa);
+let capaMarcadores = L.markerClusterGroup().addTo(mapa);
 
 // Crea un icono circular de color personalizado
 function crearIcono(color) {
@@ -173,3 +173,33 @@ generarFooter();
 cargarMarcadores();
 
 document.getElementById('btn-filtrar').addEventListener('click', cargarMarcadores);
+
+// --- Botón Mi ubicación ---
+document.getElementById('btn-mi-ubicacion').addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    alert('Tu navegador no soporta geolocalización.');
+    return;
+  }
+  const btn = document.getElementById('btn-mi-ubicacion');
+  btn.textContent = '📍 Buscando...';
+  btn.disabled = true;
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      mapa.setView([lat, lng], 15);
+      L.marker([lat, lng])
+        .addTo(mapa)
+        .bindPopup('📍 Estás aquí')
+        .openPopup();
+      btn.textContent = '📍 Mi ubicación';
+      btn.disabled = false;
+    },
+    () => {
+      alert('No se pudo obtener tu ubicación. Verificá los permisos del navegador.');
+      btn.textContent = '📍 Mi ubicación';
+      btn.disabled = false;
+    }
+  );
+});
