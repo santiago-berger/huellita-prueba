@@ -4,7 +4,8 @@
 const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
-const { Usuario } = require('../models');
+const { sequelize, Establecimiento, Usuario } = require('../models');
+const { requiereSesion } = require('../middleware/auth');
 
 // Reglas de validacion para el registro
 const reglasRegistro = [
@@ -43,22 +44,35 @@ router.post('/usuarios', reglasRegistro, async (req, res) => {
 
 // --- RP-02: Inicio de sesion ---
 // POST /login
-router.post('/login', [
-  body('correo').trim().notEmpty().isEmail().withMessage('Ingresa un correo valido'),
-  body('contrasena').notEmpty().withMessage('La contrasena es obligatoria'),
-], async (req, res) => {
-  const errores = validationResult(req);
-  if (!errores.isEmpty()) {
-    return res.status(400).json({ error: errores.array()[0].msg });
-  }
+router.post('/login', async (req, res) => {
   try {
     const { correo, contrasena } = req.body;
+
+    if (!correo || !contrasena) {
+      return res.status(400).json({ error: 'Ingresa el correo y la contrasena.' });
+    }
+
     const usuario = await Usuario.findOne({ where: { correo } });
+
+    // CA: si los datos son incorrectos, se muestra un mensaje de error
     if (!usuario || usuario.contrasena !== contrasena) {
       return res.status(401).json({ error: 'Correo o contrasena incorrectos.' });
     }
-    req.session.usuario = { id: usuario.id, nombre: usuario.nombre };
-    res.json({ mensaje: 'Sesion iniciada.', nombre: usuario.nombre });
+
+    // Se guarda la sesion del usuario junto con su rol.
+    // El rol se utilizara para determinar los permisos dentro del sistema.
+    req.session.usuario = {
+      id: usuario.id,
+      nombre: usuario.nombre,
+      rol: usuario.rol,
+    };
+
+    res.json({
+      mensaje: 'Sesion iniciada.',
+      nombre: usuario.nombre,
+      rol: usuario.rol,
+    });
+
   } catch (err) {
     res.status(500).json({ error: 'Error del servidor al iniciar sesion.' });
   }
@@ -79,6 +93,43 @@ router.get('/sesion', (req, res) => {
     res.json({ autenticado: true, usuario: req.session.usuario });
   } else {
     res.json({ autenticado: false });
+  }
+});
+
+// --- RP-16: Eliminar un reporte ---
+// DELETE /reportes/:id
+// Un usuario solo puede eliminar sus propios reportes.
+// Un administrador puede eliminar cualquier reporte.
+router.delete('/reportes/:id', requiereSesion, async (req, res) => {
+  try {
+    const reporte = await Reporte.findByPk(req.params.id);
+
+    if (!reporte) {
+      return res.status(404).json({
+        error: 'No se encontro el reporte.'
+      });
+    }
+
+    // Solo el dueño del reporte o un administrador pueden eliminarlo.
+    if (
+      reporte.usuario_id !== req.session.usuario.id &&
+      req.session.usuario.rol !== 'admin'
+    ) {
+      return res.status(403).json({
+        error: 'No tienes permisos para eliminar este reporte.'
+      });
+    }
+
+    await reporte.destroy();
+
+    res.json({
+      mensaje: 'Reporte eliminado correctamente.'
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      error: 'Error del servidor al eliminar el reporte.'
+    });
   }
 });
 

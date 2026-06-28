@@ -189,4 +189,40 @@ router.get('/reportes/:id/avistamientos', async (req, res) => {
   }
 });
 
+// --- RP-16: Eliminar un reporte ---
+// DELETE /reportes/:id
+// Solo el dueño o un admin pueden eliminarlo
+router.delete('/reportes/:id', requiereSesion, async (req, res) => {
+  try {
+    const reporte = await Reporte.findByPk(req.params.id);
+
+    if (!reporte) {
+      return res.status(404).json({
+        error: 'No se encontro el reporte.'
+      });
+    }
+
+    // permiso: dueño o admin
+    if (
+      reporte.usuario_id !== req.session.usuario.id &&
+      req.session.usuario.rol !== 'admin'
+    ) {
+      return res.status(403).json({
+        error: 'No tienes permisos para eliminar este reporte.'
+      });
+    }
+
+    await reporte.destroy();
+
+    res.json({
+      mensaje: 'Reporte eliminado correctamente.'
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      error: 'Error del servidor al eliminar el reporte.'
+    });
+  }
+});
+
 module.exports = router;

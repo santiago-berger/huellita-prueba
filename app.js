@@ -7,7 +7,7 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 
-const { sequelize, Establecimiento } = require('./models');
+const { sequelize, Establecimiento, Usuario } = require('./models');
 const rutasUsuarios = require('./routes/usuarios');
 const rutasReportes = require('./routes/reportes');
 const rutasEstablecimientos = require('./routes/establecimientos');
@@ -55,6 +55,24 @@ async function iniciar() {
   try {
     // sync crea las tablas si no existen
     await sequelize.sync();
+
+//admin
+
+const adminExiste = await Usuario.findOne({
+  where: { correo: 'admin@huellita.com' }
+});
+
+if (!adminExiste) {
+  await Usuario.create({
+    nombre: 'Administrador',
+    correo: 'admin@huellita.com',
+    contrasena: 'admin123',
+    rol: 'admin'
+  });
+
+  console.log('Usuario admin creado');
+}
+
     await cargarDatosIniciales();
     app.listen(PUERTO, () => {
       console.log('Servidor de Huellita corriendo en http://localhost:' + PUERTO);
