@@ -78,7 +78,7 @@ if (!adminExiste) {
       console.log('Servidor de Huellita corriendo en http://localhost:' + PUERTO);
     });
   } catch (err) {
-    console.error('No se pudo iniciar el servidor:', err.message);
+    console.error('No se pudo iniciar el servidor:', err);
   }
 }
 
