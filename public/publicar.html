@@ -55,6 +55,15 @@
                   <option value="otro">Otro</option>
                 </select>
               </div>
+              <div class="col-md-6 mb-3" id="campo-raza" style="display:none;">
+  <label class="form-label">Raza</label>
+  <input
+    type="text"
+    id="raza"
+    class="form-control"
+    placeholder="Ej: Labrador, Callejero, etc"
+  />
+</div>
               <div class="col-md-6 mb-3">
                 <label class="form-label">Tamano</label>
                 <select id="tamano" class="form-select">
@@ -90,14 +99,14 @@
               <input type="date" id="fecha" class="form-control" />
             </div>
             <div class="mb-3">
-              <label class="form-label">URL de una foto</label>
-              <input
-                type="url"
-                id="foto_url"
-                class="form-control"
-                placeholder="https://..."
-              />
-            </div>
+  <label class="form-label">Foto *</label>
+  <input
+  type="file"
+  id="foto"
+  name="foto"
+  class="form-control"
+  accept="image/*">
+</div>
             
               <div class="mb-3">
               <label class="form-label">Comentarios</label>
@@ -109,21 +118,21 @@
               ></textarea>
             </div>
 
-            <div class="mb-3">
-              <label class="form-label">Ubicación exacta en el mapa <span class="text-muted"></span></label>
-              <div id="mapa-publicar" style="height:250px; border-radius:8px; border:1px solid #dee2e6;"></div>
-              <small class="text-muted">* Hacé click en el mapa para marcar la ubicación exacta. <strong>Este campo es obligatorio.</strong></small>
-            </div>
-              <textarea
-                id="comentario"
-                class="form-control"
-                rows="3"
-                placeholder="Comportamiento, senas particulares, datos utiles..."
-              ></textarea>
-            </div>
-            <button id="btn-guardar" class="btn btn-huellita w-100">
-              Publicar caso
-            </button>
+          <div class="mb-3">
+  <label class="form-label">Ubicación exacta en el mapa</label>
+
+  <div id="mapa-publicar"
+       style="height:250px; border-radius:8px; border:1px solid #dee2e6;"></div>
+
+  <small class="text-muted">
+    * Hacé click en el mapa para marcar la ubicación exacta.
+    <strong>Este campo es obligatorio.</strong>
+  </small>
+</div>
+
+<button id="btn-guardar" class="btn btn-huellita w-100">
+  Publicar caso
+</button>
           </div>
         </div>
       </div>

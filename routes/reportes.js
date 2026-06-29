@@ -1,227 +1,270 @@
 // routes/reportes.js
-// Rutas de reportes de mascotas y avistamientos.
-// Funcionalidades RP-04 a RP-12 y RP-15.
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
 const router = express.Router();
+
 const { Op } = require('sequelize');
 const { Reporte, Avistamiento, Usuario } = require('../models');
 const { requiereSesion } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
 
-// Validaciones para crear o editar un reporte
+/* =========================
+   MULTER (FOTOS)
+========================= */
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'public/uploads');
+  },
+  filename: (req, file, cb) => {
+    const nombre = Date.now() + path.extname(file.originalname);
+    cb(null, nombre);
+  }
+});
+
+const upload = multer({ storage });
+
+/* =========================
+   VALIDACIONES
+========================= */
 const reglasReporte = [
   body('especie')
     .trim()
     .notEmpty().withMessage('La especie es obligatoria')
-    .isIn(['perro', 'gato', 'otro']).withMessage('La especie debe ser perro, gato u otro'),
+    .isIn(['perro', 'gato', 'otro']),
+
   body('zona')
     .trim()
     .notEmpty().withMessage('La zona es obligatoria'),
+
   body('fecha')
     .notEmpty().withMessage('La fecha es obligatoria')
-    .isDate().withMessage('La fecha no tiene un formato valido'),
+    .isDate()
 ];
 
-// --- RP-04 y RP-12: Crear un reporte (perdida o encontrada) ---
-// POST /reportes
-router.post('/reportes', requiereSesion, reglasReporte, async (req, res) => {
+/* =========================
+   CREAR REPORTE
+========================= */
+router.post('/reportes', requiereSesion, upload.single('foto'), reglasReporte, async (req, res) => {
   const errores = validationResult(req);
   if (!errores.isEmpty()) {
-    console.log('Errores de validación:', errores.array());
     return res.status(400).json({ errores: errores.array() });
   }
-  try {
-    const { nombre_mascota, especie, color, tamano, zona, fecha, foto_url, comentario, estado, latitud, longitud } = req.body;
 
+  try {
+    const {
+      nombre_mascota,
+      especie,
+      raza,
+      color,
+      tamano,
+      zona,
+      fecha,
+      comentario,
+      estado,
+      latitud,
+      longitud
+    } = req.body;
+
+    const foto_url = req.file ? '/uploads/' + req.file.filename : null;
     const estadoInicial = estado === 'Encontrada' ? 'Encontrada' : 'Perdida';
 
     const reporte = await Reporte.create({
       usuario_id: req.session.usuario.id,
       nombre_mascota: nombre_mascota || null,
-      especie, color: color || null, tamano: tamano || null,
-      zona, fecha, foto_url: foto_url || null, comentario: comentario || null,
+      especie,
+      raza: raza || null,
+      color: color || null,
+      tamano: tamano || null,
+      zona,
+      fecha,
+      comentario: comentario || null,
+      foto_url,
       estado: estadoInicial,
       latitud: latitud || null,
-      longitud: longitud || null,
+      longitud: longitud || null
     });
+
     res.status(201).json({ mensaje: 'Reporte publicado con exito.', id: reporte.id });
+
   } catch (err) {
-    res.status(500).json({ error: 'Error del servidor al guardar el reporte.' });
+    res.status(500).json({ error: 'Error del servidor.' });
   }
 });
 
-// --- RP-07 y RP-08: Listado de reportes con filtros ---
-// GET /reportes?estado=&especie=&zona=
+/* =========================
+   LISTAR REPORTES
+========================= */
 router.get('/reportes', async (req, res) => {
   try {
     const { estado, especie, zona } = req.query;
     const where = {};
 
     where.estado = estado || 'Perdida';
-
     if (especie) where.especie = especie;
-    if (zona) where.zona = { [Op.like]: '%' + zona + '%' };
+    if (zona) where.zona = { [Op.like]: `%${zona}%` };
 
-    const reportes = await Reporte.findAll({ where, order: [['fecha', 'DESC']] });
+    const reportes = await Reporte.findAll({
+      where,
+      order: [['fecha', 'DESC']]
+    });
+
     res.json(reportes);
+
   } catch (err) {
-    res.status(500).json({ error: 'Error del servidor al obtener los reportes.' });
+    res.status(500).json({ error: 'Error al obtener reportes.' });
   }
 });
 
-// --- RP-05: Ficha detallada de un reporte ---
-// GET /reportes/:id
+/* =========================
+   FICHA
+========================= */
 router.get('/reportes/:id', async (req, res) => {
   try {
     const reporte = await Reporte.findByPk(req.params.id, {
-      include: [{ model: Usuario, attributes: ['nombre'] }],
+      include: [{ model: Usuario, attributes: ['nombre'] }]
     });
+
     if (!reporte) {
-      return res.status(404).json({ error: 'No se encontro el reporte solicitado.' });
+      return res.status(404).json({ error: 'No encontrado' });
     }
+
     res.json(reporte);
+
   } catch (err) {
-    res.status(500).json({ error: 'Error del servidor al obtener el reporte.' });
+    res.status(500).json({ error: 'Error servidor.' });
   }
 });
 
-// --- RP-06: Editar un reporte ---
-// PUT /reportes/:id
+/* =========================
+   EDITAR
+========================= */
 router.put('/reportes/:id', requiereSesion, reglasReporte, async (req, res) => {
-  const errores = validationResult(req);
-  if (!errores.isEmpty()) {
-    return res.status(400).json({ errores: errores.array() });
-  }
   try {
     const reporte = await Reporte.findByPk(req.params.id);
-    if (!reporte) {
-      return res.status(404).json({ error: 'No se encontro el reporte.' });
-    }
-    if (reporte.usuario_id !== req.session.usuario.id) {
-      return res.status(403).json({ error: 'Solo el dueño del reporte puede editarlo.' });
-    }
 
-    const campos = ['nombre_mascota', 'especie', 'color', 'tamano', 'zona', 'fecha', 'foto_url', 'comentario', 'latitud', 'longitud'];
-    campos.forEach((campo) => {
+    if (!reporte) return res.status(404).json({ error: 'No existe' });
+    if (reporte.usuario_id !== req.session.usuario.id)
+      return res.status(403).json({ error: 'Sin permiso' });
+
+    Object.keys(req.body).forEach(campo => {
       if (req.body[campo] !== undefined) reporte[campo] = req.body[campo];
     });
+
     await reporte.save();
-    res.json({ mensaje: 'Reporte actualizado con exito.' });
+    res.json({ mensaje: 'Actualizado' });
+
   } catch (err) {
-    res.status(500).json({ error: 'Error del servidor al actualizar el reporte.' });
+    res.status(500).json({ error: 'Error servidor' });
   }
 });
 
-// --- RP-06: Cerrar un caso (marcar como Reencontrada) ---
-// PUT /reportes/:id/cerrar
+/* =========================
+   CERRAR CASO
+========================= */
 router.put('/reportes/:id/cerrar', requiereSesion, async (req, res) => {
   try {
     const reporte = await Reporte.findByPk(req.params.id);
-    if (!reporte) {
-      return res.status(404).json({ error: 'No se encontro el reporte.' });
-    }
-    if (reporte.usuario_id !== req.session.usuario.id) {
-      return res.status(403).json({ error: 'Solo el dueño del reporte puede cerrarlo.' });
-    }
+
+    if (!reporte) return res.status(404).json({ error: 'No existe' });
+    if (reporte.usuario_id !== req.session.usuario.id)
+      return res.status(403).json({ error: 'Sin permiso' });
+
     reporte.estado = 'Reencontrada';
     await reporte.save();
-    res.json({ mensaje: 'Caso cerrado. La mascota fue marcada como reencontrada.' });
+
+    res.json({ mensaje: 'Caso cerrado' });
+
   } catch (err) {
-    res.status(500).json({ error: 'Error del servidor al cerrar el caso.' });
+    res.status(500).json({ error: 'Error servidor' });
   }
 });
 
-// --- RP-09: Mascotas encontradas similares ---
-// GET /reportes/:id/coincidencias
+/* =========================
+   COINCIDENCIAS
+========================= */
 router.get('/reportes/:id/coincidencias', async (req, res) => {
   try {
-    const reporte = await Reporte.findByPk(req.params.id);
-    if (!reporte) {
-      return res.status(404).json({ error: 'No se encontro el reporte.' });
-    }
-    const coincidencias = await Reporte.findAll({
+    const r = await Reporte.findByPk(req.params.id);
+
+    const lista = await Reporte.findAll({
       where: {
         estado: 'Encontrada',
-        especie: reporte.especie,
-        zona: { [Op.like]: '%' + reporte.zona + '%' },
-      },
-      order: [['fecha', 'DESC']],
+        especie: r.especie,
+        zona: { [Op.like]: `%${r.zona}%` }
+      }
     });
-    res.json(coincidencias);
+
+    res.json(lista);
+
   } catch (err) {
-    res.status(500).json({ error: 'Error del servidor al buscar coincidencias.' });
+    res.status(500).json({ error: 'Error servidor' });
   }
 });
 
-// --- RP-10: Reportar un avistamiento ---
-// POST /reportes/:id/avistamientos
+/* =========================
+   AVISTAMIENTOS (CORRECTO)
+========================= */
 router.post('/reportes/:id/avistamientos', requiereSesion, async (req, res) => {
   try {
     const reporte = await Reporte.findByPk(req.params.id);
-    if (!reporte) {
-      return res.status(404).json({ error: 'No se encontro el reporte.' });
-    }
+    if (!reporte) return res.status(404).json({ error: 'No existe' });
+
     const { lugar, fecha, comentario } = req.body;
+
     if (!lugar || !fecha) {
-      return res.status(400).json({ error: 'El lugar y la fecha son obligatorios.' });
+      return res.status(400).json({ error: 'Faltan datos' });
     }
+
     await Avistamiento.create({
       reporte_id: reporte.id,
-      lugar, fecha, comentario: comentario || null,
+      lugar,
+      fecha,
+      comentario: comentario || null
     });
-    res.status(201).json({ mensaje: 'Avistamiento registrado. Gracias por colaborar.' });
+
+    res.status(201).json({ mensaje: 'Avistamiento guardado' });
+
   } catch (err) {
-    res.status(500).json({ error: 'Error del servidor al guardar el avistamiento.' });
+    res.status(500).json({ error: 'Error servidor' });
   }
 });
 
-// --- RP-11: Historial de avistamientos de un caso ---
-// GET /reportes/:id/avistamientos
+/* =========================
+   LISTAR AVISTAMIENTOS
+========================= */
 router.get('/reportes/:id/avistamientos', async (req, res) => {
   try {
-    const avistamientos = await Avistamiento.findAll({
+    const data = await Avistamiento.findAll({
       where: { reporte_id: req.params.id },
-      order: [['fecha', 'DESC']],
+      order: [['fecha', 'DESC']]
     });
-    res.json(avistamientos);
+
+    res.json(data);
+
   } catch (err) {
-    res.status(500).json({ error: 'Error del servidor al obtener los avistamientos.' });
+    res.status(500).json({ error: 'Error servidor' });
   }
 });
 
-// --- RP-16: Eliminar un reporte ---
-// DELETE /reportes/:id
-// Solo el dueño o un admin pueden eliminarlo
+/* =========================
+   ELIMINAR
+========================= */
 router.delete('/reportes/:id', requiereSesion, async (req, res) => {
   try {
-    const reporte = await Reporte.findByPk(req.params.id);
+    const r = await Reporte.findByPk(req.params.id);
 
-    if (!reporte) {
-      return res.status(404).json({
-        error: 'No se encontro el reporte.'
-      });
+    if (!r) return res.status(404).json({ error: 'No existe' });
+
+    if (r.usuario_id !== req.session.usuario.id && req.session.usuario.rol !== 'admin') {
+      return res.status(403).json({ error: 'Sin permiso' });
     }
 
-    // permiso: dueño o admin
-    if (
-      reporte.usuario_id !== req.session.usuario.id &&
-      req.session.usuario.rol !== 'admin'
-    ) {
-      return res.status(403).json({
-        error: 'No tienes permisos para eliminar este reporte.'
-      });
-    }
-
-    await reporte.destroy();
-
-    res.json({
-      mensaje: 'Reporte eliminado correctamente.'
-    });
+    await r.destroy();
+    res.json({ mensaje: 'Eliminado' });
 
   } catch (err) {
-    res.status(500).json({
-      error: 'Error del servidor al eliminar el reporte.'
-    });
+    res.status(500).json({ error: 'Error servidor' });
   }
 });
 

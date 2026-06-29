@@ -23,6 +23,10 @@ const Reporte = sequelize.define('Reporte', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  raza: {
+  type: DataTypes.STRING,
+  allowNull: true,
+  },
   color: {
     type: DataTypes.STRING,
     allowNull: true,

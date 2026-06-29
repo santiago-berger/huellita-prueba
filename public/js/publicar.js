@@ -1,137 +1,52 @@
-// js/publicar.js
-// Maneja la publicacion (RP-04, RP-12) y la edicion (RP-06) de reportes.
-// Si la URL trae ?id=, la pagina funciona en modo edicion.
+document.getElementById('btn-guardar').addEventListener('click', async (e) => {
+  e.preventDefault();
 
-// --- Mapa de ubicación (Leaflet) ---
-let latSeleccionada = null;
-let lngSeleccionada = null;
-let markerPublicar = null;
+  const especie = document.getElementById('especie').value;
+  const zona = document.getElementById('zona').value;
+  const fecha = document.getElementById('fecha').value;
 
-const mapaPublicar = L.map('mapa-publicar').setView([-26.1775, -58.1781], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
-  maxZoom: 19,
-}).addTo(mapaPublicar);
+  console.log("DEBUG INPUTS:", { especie, zona, fecha });
 
-mapaPublicar.on('click', (e) => {
-  latSeleccionada = e.latlng.lat;
-  lngSeleccionada = e.latlng.lng;
-  if (markerPublicar) markerPublicar.remove();
-  markerPublicar = L.marker([latSeleccionada, lngSeleccionada]).addTo(mapaPublicar);
-});
-
-// --- Inicialización ---
-const params = new URLSearchParams(window.location.search);
-const idEdicion = params.get('id');
-
-// Pone la fecha de hoy por defecto
-document.getElementById('fecha').value = fechaHoy();
-
-// Verifica que haya sesion iniciada antes de permitir publicar.
-(async () => {
-  const sesion = await obtenerSesion();
-  if (!sesion.autenticado) {
-    mostrarMensaje('msg-form', 'Debes iniciar sesion para publicar un caso. Redirigiendo...', 'warning');
-    setTimeout(() => { window.location.href = 'login.html'; }, 2000);
-    return;
-  }
-  if (idEdicion) {
-    cargarParaEditar();
-  }
-})();
-
-// El nombre se oculta cuando es una mascota encontrada.
-document.getElementById('tipo').addEventListener('change', (e) => {
-  const campoNombre = document.getElementById('campo-nombre');
-  campoNombre.style.display = e.target.value === 'Encontrada' ? 'none' : 'block';
-});
-
-// --- RP-06: cargar los datos de un reporte existente para editar ---
-async function cargarParaEditar() {
-  document.getElementById('titulo-form').textContent = 'Editar caso';
-  document.getElementById('btn-guardar').textContent = 'Guardar cambios';
-  try {
-    const resp = await fetch('/reportes/' + idEdicion);
-    const r = await resp.json();
-    document.getElementById('tipo').value = r.estado === 'Encontrada' ? 'Encontrada' : 'Perdida';
-    document.getElementById('tipo').dispatchEvent(new Event('change'));
-    document.getElementById('nombre_mascota').value = r.nombre_mascota || '';
-    document.getElementById('especie').value = r.especie || '';
-    document.getElementById('tamano').value = r.tamano || '';
-    document.getElementById('color').value = r.color || '';
-    document.getElementById('zona').value = r.zona || '';
-    document.getElementById('fecha').value = r.fecha || '';
-    document.getElementById('foto_url').value = r.foto_url || '';
-    document.getElementById('comentario').value = r.comentario || '';
-
-    // Si el reporte ya tiene coordenadas, poner el marker en el mapa
-    if (r.latitud && r.longitud) {
-      latSeleccionada = r.latitud;
-      lngSeleccionada = r.longitud;
-      markerPublicar = L.marker([latSeleccionada, lngSeleccionada]).addTo(mapaPublicar);
-      mapaPublicar.setView([latSeleccionada, lngSeleccionada], 15);
-    }
-  } catch (err) {
-    mostrarMensaje('msg-form', 'No se pudo cargar el reporte.', 'danger');
-  }
-}
-
-// --- Guardar (crear o editar) ---
-document.getElementById('btn-guardar').addEventListener('click', async () => {
-  const datos = {
-    estado: document.getElementById('tipo').value,
-    nombre_mascota: document.getElementById('nombre_mascota').value.trim(),
-    especie: document.getElementById('especie').value,
-    tamano: document.getElementById('tamano').value,
-    color: document.getElementById('color').value.trim(),
-    zona: document.getElementById('zona').value.trim(),
-    fecha: document.getElementById('fecha').value,
-    foto_url: document.getElementById('foto_url').value.trim(),
-    comentario: document.getElementById('comentario').value.trim(),
-    latitud: latSeleccionada,
-    longitud: lngSeleccionada,
-  };
-
-  // Validacion: especie, zona, fecha y ubicacion en el mapa son obligatorias
-  if (!datos.especie || !datos.zona || !datos.fecha) {
-    mostrarMensaje('msg-form', 'La especie, la zona y la fecha son obligatorias.', 'danger');
-    return;
-  }
-  if (!latSeleccionada || !lngSeleccionada) {
-    mostrarMensaje('msg-form', 'Debés marcar la ubicación exacta en el mapa.', 'danger');
+  if (!especie || !zona || !fecha) {
+    alert("Faltan datos");
     return;
   }
 
-  try {
-    console.log('Datos enviados:', datos);
-    let resp;
-    if (idEdicion) {
-      // RP-06: editar
-      resp = await fetch('/reportes/' + idEdicion, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos),
-      });
-    } else {
-      // RP-04 / RP-12: crear
-      resp = await fetch('/reportes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos),
-      });
-    }
-    const data = await resp.json();
-    if (resp.ok) {
-      mostrarMensaje('msg-form', data.mensaje, 'success');
-      const destino = idEdicion ? 'ficha.html?id=' + idEdicion : 'reportes.html';
-      setTimeout(() => { window.location.href = destino; }, 1500);
-    } else {
-      const msg = data.error
-        || (data.errores && data.errores[0]?.msg)
-        || 'Error al guardar el reporte.';
-      mostrarMensaje('msg-form', msg, 'danger');
-    }
-  } catch (err) {
-    mostrarMensaje('msg-form', 'No se pudo conectar con el servidor.', 'danger');
+  const formData = new FormData();
+
+  for (let [k, v] of [
+    ["nombre_mascota", document.getElementById('nombre_mascota').value],
+    ["especie", especie],
+    ["raza", document.getElementById('raza').value],
+    ["color", document.getElementById('color').value],
+    ["tamano", document.getElementById('tamano').value],
+    ["zona", zona],
+    ["fecha", fecha],
+    ["comentario", document.getElementById('comentario').value],
+    ["estado", document.getElementById('tipo').value],
+    ["latitud", lat],
+    ["longitud", lng],
+  ]) {
+    formData.append(k, v);
   }
+
+  const foto = document.getElementById('foto').files[0];
+  if (foto) formData.append('foto', foto);
+
+  const resp = await fetch('/reportes', {
+    method: 'POST',
+    body: formData
+  });
+
+  const data = await resp.json();
+
+  console.log("RESPUESTA BACKEND:", data);
+
+  if (!resp.ok) {
+    alert(JSON.stringify(data));
+    return;
+  }
+
+  alert("Publicado OK");
+  window.location.href = "reportes.html";
 });
